@@ -1,0 +1,21 @@
+import 'package:alice/alice.dart';
+import 'package:dio/dio.dart' show Dio, ResponseType;
+import 'package:clean_architecture_bloc/common/network/api_config.dart';
+
+import 'dio_interceptor.dart';
+
+final alice = Alice();
+
+class DioClient {
+  final Dio dio;
+
+  DioClient(this.dio) {
+    dio
+      ..options.baseUrl = ApiConfig.baseUrl
+      ..options.headers = ApiConfig.headers
+      ..options.connectTimeout = ApiConfig.connectionTimeout
+      ..options.receiveTimeout = ApiConfig.receiveTimeout
+      ..options.responseType = ResponseType.json
+      ..interceptors.add(DioInterceptor());
+  }
+}

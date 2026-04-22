@@ -1,0 +1,53 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(':app')
+}
+
+subprojects { subproject ->
+    subproject.plugins.withId("com.android.library") {
+        def androidExtension = subproject.extensions.findByName("android")
+        if (androidExtension != null) {
+            if (androidExtension.hasProperty("namespace") && !androidExtension.namespace) {
+                androidExtension.namespace = subproject.group?.toString() ?: "com.example.${subproject.name.replace('-', '_')}"
+            }
+            androidExtension.compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+            if (androidExtension.hasProperty("kotlinOptions")) {
+                androidExtension.kotlinOptions {
+                    jvmTarget = "17"
+                }
+            }
+        }
+    }
+
+    subproject.plugins.withId("com.android.application") {
+        def androidExtension = subproject.extensions.findByName("android")
+        if (androidExtension != null) {
+            androidExtension.compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+            if (androidExtension.hasProperty("kotlinOptions")) {
+                androidExtension.kotlinOptions {
+                    jvmTarget = "17"
+                }
+            }
+        }
+    }
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
