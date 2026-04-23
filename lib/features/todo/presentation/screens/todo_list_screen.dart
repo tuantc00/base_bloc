@@ -7,14 +7,14 @@ import 'package:clean_architecture_bloc/common/widget/drop_down.dart';
 import 'package:clean_architecture_bloc/common/widget/popup_menu.dart';
 import 'package:clean_architecture_bloc/common/widget/text_input.dart';
 import 'package:clean_architecture_bloc/common/widget/empty_widget.dart';
-import 'package:clean_architecture_bloc/features/user/data/models/user.dart';
+import 'package:clean_architecture_bloc/features/user/domain/entities/user_entity.dart';
 import 'package:clean_architecture_bloc/common/widget/date_time_picker.dart';
-import 'package:clean_architecture_bloc/features/todo/data/models/todo.dart';
 import 'package:clean_architecture_bloc/common/bloc/generic_bloc_builder.dart';
 import 'package:clean_architecture_bloc/features/todo/domain/entities/todo_entity.dart';
 import 'package:clean_architecture_bloc/features/todo/presentation/bloc/todo_bloc.dart';
 import 'package:clean_architecture_bloc/features/todo/presentation/bloc/todo_event.dart';
 import 'package:clean_architecture_bloc/features/todo/presentation/widgets/todo_list_item.dart';
+import 'package:go_router/go_router.dart';
 
 enum Mode { create, update }
 
@@ -24,7 +24,7 @@ class ToDoListScreen extends StatefulWidget {
     required this.user,
   });
 
-  final User user;
+  final UserEntity user;
 
   @override
   State<ToDoListScreen> createState() => _ToDoListScreenState();
@@ -34,11 +34,11 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
   PreferredSizeWidget _appBar(BuildContext context) {
     return AppBar(
       leading: IconButton(
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => context.pop(),
         icon: const Icon(Icons.arrow_back),
       ),
       centerTitle: true,
-      title: const Text("Todos"),
+      title: const Text('Todos'),
     );
   }
 
@@ -47,7 +47,7 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
       padding: const EdgeInsets.only(left: 10),
       child: Row(
         children: [
-          const Text("Todo", style: headLine2),
+          const Text('Todo', style: headLine2),
           const SizedBox(width: 10),
           const Icon(Icons.archive_outlined, color: Color(0xFFF4511E)),
           Builder(
@@ -69,7 +69,9 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
           PopupMenu<TodoStatus>(
             items: TodoStatus.values,
             onChanged: (TodoStatus status) {
-              context.read<TodoBloc>().add(TodoFetched(widget.user.id!, status: status));
+              context
+                  .read<TodoBloc>()
+                  .add(TodoFetched(widget.user.id!, status: status));
             },
           )
         ],
@@ -93,14 +95,14 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
         },
         leading: const Icon(Icons.add, color: Color(0xFFF4511E)),
         title: const Text(
-          "Add task",
+          'Add task',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
     );
   }
 
-  createOrUpdateTodo(ToDo todo, Mode mode) {
+  createOrUpdateTodo(TodoEntity todo, Mode mode) {
     if (mode == Mode.create) {
       context.read<TodoBloc>().add(TodoCreated(todo));
     } else {
@@ -111,7 +113,7 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
     showDialog(
       context: context,
       builder: (_) {
-        return GenericBlocBuilder<TodoBloc, ToDo>(
+        return GenericBlocBuilder<TodoBloc, TodoEntity>(
           successStatusTitle: "Successfully ${mode.name}d",
           progressStatusTitle: "${mode.name}ing task...",
           onRetryPressed: () {
@@ -150,12 +152,14 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
       backgroundColor: Colors.white,
       builder: (_) {
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: SingleChildScrollView(
             child: Form(
                 key: formKey,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -189,9 +193,10 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () async {
-                            bool isValid = formKey.currentState?.validate() ?? false;
+                            bool isValid =
+                                formKey.currentState?.validate() ?? false;
                             if (isValid) {
-                              ToDo todo = ToDo(
+                              TodoEntity todo = TodoEntity(
                                 id: todoId,
                                 userId: widget.user.id!,
                                 title: title,
@@ -213,15 +218,15 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
     );
   }
 
-  Widget taskList(List<ToDo> todos) {
+  Widget taskList(List<TodoEntity> todos) {
     return TodoListItem(
       items: todos,
-      onDeletePressed: (ToDo todo) {
+      onDeletePressed: (TodoEntity todo) {
         context.read<TodoBloc>().add(TodoDeleted(todo));
         showDialog(
           context: context,
           builder: (_) {
-            return GenericBlocBuilder<TodoBloc, ToDo>(
+            return GenericBlocBuilder<TodoBloc, TodoEntity>(
               successStatusTitle: "Successfully deleted",
               progressStatusTitle: "Deleting task...",
               onRetryPressed: () {
@@ -235,7 +240,7 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
           },
         );
       },
-      onEditPressed: (ToDo todo) {
+      onEditPressed: (TodoEntity todo) {
         todoBottomSheet(
           context,
           todoId: todo.id,
@@ -265,9 +270,12 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
             children: [
               header(),
               createTodo(),
-              GenericBlocBuilder<TodoBloc, ToDo>(
+              GenericBlocBuilder<TodoBloc, TodoEntity>(
                 buildWhen: (_, __) {
-                  return context.read<TodoBloc>().operation == ApiOperation.select ? true : false;
+                  return context.read<TodoBloc>().operation ==
+                          ApiOperation.select
+                      ? true
+                      : false;
                 },
                 emptyWidget: const EmptyWidget(message: "No Todos!"),
                 successWidget: (state) => taskList(state.data ?? []),

@@ -1,4 +1,5 @@
 import 'dart:convert' show jsonDecode;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:clean_architecture_bloc/core/app_asset.dart' show AppAsset;
 import 'package:clean_architecture_bloc/core/app_string.dart' show AppString;
@@ -45,12 +46,15 @@ class AppConfig {
 
 class ConfigLoader {
   static AppConfig? _instance;
+  static const _backendUrlFromDefine = String.fromEnvironment('BACKEND_URL');
+  static const _apiKeyFromDefine = String.fromEnvironment('API_KEY');
 
   ConfigLoader._();
 
   static AppConfig get instance {
     if (_instance == null) {
-      throw Exception('AppConfig not loaded yet! Call ConfigLoader.load() first.');
+      throw Exception(
+          'AppConfig not loaded yet! Call ConfigLoader.load() first.');
     }
     return _instance!;
   }
@@ -69,10 +73,37 @@ class ConfigLoader {
     try {
       final jsonString = await rootBundle.loadString(env.assetPath);
       final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
-      _instance = AppConfig.fromJson(jsonMap, env);
+      final fileConfig = AppConfig.fromJson(jsonMap, env);
+      final backendUrlOverride = _readRuntimeEnv(
+            'BACKEND_URL',
+          ) ??
+          (_backendUrlFromDefine.isNotEmpty ? _backendUrlFromDefine : null);
+      final apiKeyOverride = _readRuntimeEnv(
+            'API_KEY',
+          ) ??
+          (_apiKeyFromDefine.isNotEmpty ? _apiKeyFromDefine : null);
+
+      _instance = AppConfig(
+        backendUrl: backendUrlOverride ?? fileConfig.backendUrl,
+        apiKey: apiKeyOverride ?? fileConfig.apiKey,
+        env: env,
+      );
       return _instance!;
     } catch (e) {
-      throw Exception('Failed to load configuration for ${env.displayName}: $e');
+      throw Exception(
+          'Failed to load configuration for ${env.displayName}: $e');
+    }
+  }
+
+  static String? _readRuntimeEnv(String key) {
+    try {
+      final value = dotenv.maybeGet(key)?.trim();
+      if (value == null || value.isEmpty) {
+        return null;
+      }
+      return value;
+    } catch (_) {
+      return null;
     }
   }
 }

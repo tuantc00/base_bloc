@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:clean_architecture_bloc/core/app_style.dart';
 import 'package:clean_architecture_bloc/core/app_extension.dart';
-import 'package:clean_architecture_bloc/features/todo/data/models/todo.dart';
+import 'package:clean_architecture_bloc/features/todo/domain/entities/todo_entity.dart';
 import 'package:clean_architecture_bloc/features/todo/presentation/widgets/circle_container.dart';
 
 class TodoListItem extends StatelessWidget {
@@ -13,10 +13,10 @@ class TodoListItem extends StatelessWidget {
     required this.onDeletePressed,
   });
 
-  final List<ToDo> items;
+  final List<TodoEntity> items;
 
-  final void Function(ToDo) onEditPressed;
-  final void Function(ToDo) onDeletePressed;
+  final void Function(TodoEntity) onEditPressed;
+  final void Function(TodoEntity) onDeletePressed;
 
   @override
   Widget build(BuildContext context) {

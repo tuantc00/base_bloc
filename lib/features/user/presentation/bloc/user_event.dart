@@ -1,4 +1,3 @@
-import 'package:clean_architecture_bloc/features/user/data/models/user.dart';
 import 'package:clean_architecture_bloc/features/user/domain/entities/user_entity.dart';
 
 /// Events should be named in the past tense because events are things
@@ -14,19 +13,19 @@ class UsersFetched extends UserEvent {
 }
 
 class UserCreated extends UserEvent {
-  final User user;
+  final UserEntity user;
 
   UserCreated(this.user);
 }
 
 class UserUpdated extends UserEvent {
-  final User user;
+  final UserEntity user;
 
   UserUpdated(this.user);
 }
 
 class UserDeleted extends UserEvent {
-  final User user;
+  final UserEntity user;
 
   UserDeleted(this.user);
 }

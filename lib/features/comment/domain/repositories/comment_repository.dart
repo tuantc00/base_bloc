@@ -1,10 +1,10 @@
 import 'package:clean_architecture_bloc/common/network/api_result.dart';
-import 'package:clean_architecture_bloc/features/comment/data/models/comment.dart';
+import 'package:clean_architecture_bloc/features/comment/domain/entities/comment_entity.dart';
 
 abstract class CommentRepository {
-  Future<ApiResult<List<Comment>>> getComments(int postId);
+  Future<ApiResult<List<CommentEntity>>> getComments(int postId);
 
-  Future<ApiResult<bool>> createComment(Comment comment);
+  Future<ApiResult<bool>> createComment(CommentEntity comment);
 
-  Future<ApiResult<bool>> deleteComment(Comment comment);
+  Future<ApiResult<bool>> deleteComment(CommentEntity comment);
 }

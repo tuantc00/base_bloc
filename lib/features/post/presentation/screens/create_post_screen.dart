@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:clean_architecture_bloc/core/app_extension.dart';
 import 'package:clean_architecture_bloc/common/widget/text_input.dart';
-import 'package:clean_architecture_bloc/features/user/data/models/user.dart';
-import 'package:clean_architecture_bloc/features/post/data/models/post.dart';
+import 'package:clean_architecture_bloc/features/user/domain/entities/user_entity.dart';
+import 'package:clean_architecture_bloc/features/post/domain/entities/post_entity.dart';
 import 'package:clean_architecture_bloc/common/bloc/generic_bloc_builder.dart';
 import 'package:clean_architecture_bloc/features/post/presentation/bloc/post_bloc.dart';
 import 'package:clean_architecture_bloc/features/post/presentation/bloc/post_event.dart';
@@ -18,8 +18,8 @@ class CreatePostScreen extends StatefulWidget {
     this.post,
   });
 
-  final User user;
-  final Post? post;
+  final UserEntity user;
+  final PostEntity? post;
   final PostMode mode;
 
   @override
@@ -38,8 +38,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     super.initState();
   }
 
-  initializeValues() {
-    //Update
+  void initializeValues() {
     if (widget.post != null && widget.mode == PostMode.update) {
       postTitle = widget.post?.title ?? "";
       postBody = widget.post?.body ?? "";
@@ -90,7 +89,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   onPressed: () {
                     bool isValid = formKey.currentState?.validate() ?? false;
                     if (isValid) {
-                      Post post = Post(id: postId, body: postBody, title: postTitle, userId: widget.user.id!);
+                      final post = PostEntity(
+                        id: postId,
+                        body: postBody,
+                        title: postTitle,
+                        userId: widget.user.id!,
+                      );
 
                       if (widget.mode == PostMode.create) {
                         context.read<PostBloc>().add(PostCreated(post));
@@ -101,9 +105,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       showDialog(
                         context: context,
                         builder: (_) {
-                          return GenericBlocBuilder<PostBloc, Post>(
-                            progressStatusTitle: "${widget.mode.name}ing post...",
-                            successStatusTitle: "Successfully ${widget.mode.name}ed",
+                          return GenericBlocBuilder<PostBloc, PostEntity>(
+                            progressStatusTitle:
+                                "${widget.mode.name}ing post...",
+                            successStatusTitle:
+                                "Successfully ${widget.mode.name}ed",
                             onRetryPressed: () {
                               if (widget.mode == PostMode.create) {
                                 context.read<PostBloc>().add(PostCreated(post));

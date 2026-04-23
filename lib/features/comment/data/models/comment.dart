@@ -18,5 +18,15 @@ class Comment extends CommentEntity {
   factory Comment.fromJson(Map<String, dynamic> json) =>
       _$CommentFromJson(json);
 
+  factory Comment.fromEntity(CommentEntity entity) {
+    return Comment(
+      id: entity.id,
+      postId: entity.postId,
+      name: entity.name,
+      email: entity.email,
+      body: entity.body,
+    );
+  }
+
   Map<String, dynamic> toJson() => _$CommentToJson(this);
 }

@@ -1,4 +1,3 @@
-import 'package:clean_architecture_bloc/features/todo/data/models/todo.dart';
 import 'package:clean_architecture_bloc/features/todo/domain/entities/todo_entity.dart';
 
 /// Events should be named in the past tense because events are things
@@ -14,19 +13,19 @@ class TodoFetched extends TodoEvent {
 }
 
 class TodoCreated extends TodoEvent {
-  final ToDo todo;
+  final TodoEntity todo;
 
   TodoCreated(this.todo);
 }
 
 class TodoUpdated extends TodoEvent {
-  final ToDo todo;
+  final TodoEntity todo;
 
   TodoUpdated(this.todo);
 }
 
 class TodoDeleted extends TodoEvent {
-  final ToDo todo;
+  final TodoEntity todo;
 
   TodoDeleted(this.todo);
 }

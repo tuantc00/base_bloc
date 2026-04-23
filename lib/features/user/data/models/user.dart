@@ -17,5 +17,15 @@ class User extends UserEntity {
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
+  factory User.fromEntity(UserEntity entity) {
+    return User(
+      id: entity.id,
+      name: entity.name,
+      email: entity.email,
+      gender: entity.gender,
+      status: entity.status,
+    );
+  }
+
   Map<String, dynamic> toJson() => _$UserToJson(this);
 }

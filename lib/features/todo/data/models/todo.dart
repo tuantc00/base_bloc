@@ -17,5 +17,15 @@ class ToDo extends TodoEntity {
 
   factory ToDo.fromJson(Map<String, dynamic> json) => _$ToDoFromJson(json);
 
+  factory ToDo.fromEntity(TodoEntity entity) {
+    return ToDo(
+      id: entity.id,
+      userId: entity.userId,
+      title: entity.title,
+      dueOn: entity.dueOn,
+      status: entity.status,
+    );
+  }
+
   Map<String, dynamic> toJson() => _$ToDoToJson(this);
 }

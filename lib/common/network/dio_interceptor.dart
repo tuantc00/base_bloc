@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:clean_architecture_bloc/core/app_extension.dart';
 import 'package:clean_architecture_bloc/core/app_style.dart' show logger;
 
@@ -9,11 +10,17 @@ class DioInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (kReleaseMode) {
+      return super.onRequest(options, handler);
+    }
+
     final buffer = StringBuffer();
     buffer.writeln('====================START====================');
     buffer.writeln('HTTP method => ${options.method}');
-    buffer.writeln('Request => ${options.baseUrl}${options.path}${options.queryParameters.format}');
-    _appendSection(buffer, 'Header', _formatData(options.headers));
+    buffer.writeln(
+        'Request => ${options.baseUrl}${options.path}${options.queryParameters.format}');
+    _appendSection(
+        buffer, 'Header', _formatData(_sanitizeHeaders(options.headers)));
     _appendSection(buffer, 'Body', _formatData(options.data));
     logger.i(buffer.toString().trimRight());
     return super.onRequest(options, handler);
@@ -21,6 +28,10 @@ class DioInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (kReleaseMode) {
+      return super.onError(err, handler);
+    }
+
     final options = err.requestOptions;
     final buffer = StringBuffer();
     buffer.writeln('HTTP method => ${options.method}');
@@ -32,11 +43,25 @@ class DioInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (kReleaseMode) {
+      return super.onResponse(response, handler);
+    }
+
     final buffer = StringBuffer();
     buffer.writeln('Response => StatusCode: ${response.statusCode}');
     _appendSection(buffer, 'Response Body', _formatData(response.data));
     logger.i(buffer.toString().trimRight());
     return super.onResponse(response, handler);
+  }
+
+  Map<String, dynamic> _sanitizeHeaders(Map<String, dynamic> headers) {
+    final sanitized = Map<String, dynamic>.from(headers);
+    for (final entry in sanitized.entries.toList()) {
+      if (entry.key.toLowerCase() == 'authorization') {
+        sanitized[entry.key] = '***';
+      }
+    }
+    return sanitized;
   }
 
   void _appendSection(StringBuffer buffer, String label, String content) {

@@ -2,18 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:clean_architecture_bloc/core/app_style.dart';
 import 'package:clean_architecture_bloc/core/app_extension.dart';
+import 'package:clean_architecture_bloc/core/router/app_navigation.dart';
 import 'package:clean_architecture_bloc/common/bloc/bloc_helper.dart';
 import 'package:clean_architecture_bloc/common/widget/popup_menu.dart';
 import 'package:clean_architecture_bloc/common/widget/empty_widget.dart';
 import 'package:clean_architecture_bloc/common/dialog/delete_dialog.dart';
 import 'package:clean_architecture_bloc/common/dialog/create_dialog.dart';
-import 'package:clean_architecture_bloc/features/user/data/models/user.dart';
 import 'package:clean_architecture_bloc/common/bloc/generic_bloc_builder.dart';
 import 'package:clean_architecture_bloc/features/user/presentation/bloc/user_bloc.dart';
 import 'package:clean_architecture_bloc/features/user/domain/entities/user_entity.dart';
 import 'package:clean_architecture_bloc/features/user/presentation/bloc/user_event.dart';
-import 'package:clean_architecture_bloc/features/post/presentation/screens/post_list_screen.dart';
-import 'package:clean_architecture_bloc/features/todo/presentation/screens/todo_list_screen.dart';
 import 'package:clean_architecture_bloc/features/user/presentation/widgets/status_container.dart';
 
 enum Operation { edit, delete, post, todo }
@@ -55,10 +53,10 @@ class _UserListScreenState extends State<UserListScreen> {
   Widget get floatingActionButton {
     return FloatingActionButton(
       onPressed: () async {
-        late User user;
+        late UserEntity user;
         bool isCreate = await createDialog(
           context: context,
-          userData: (User userValue) => user = userValue,
+          userData: (UserEntity userValue) => user = userValue,
         );
 
         if (isCreate) {
@@ -67,7 +65,7 @@ class _UserListScreenState extends State<UserListScreen> {
           showDialog(
             context: context,
             builder: (_) {
-              return GenericBlocBuilder<UserBloc, User>(
+              return GenericBlocBuilder<UserBloc, UserEntity>(
                 successStatusTitle: 'Successfully created',
                 progressStatusTitle: "Creating user...",
                 onRetryPressed: () {
@@ -86,7 +84,7 @@ class _UserListScreenState extends State<UserListScreen> {
     );
   }
 
-  Widget userListItem(User user) {
+  Widget userListItem(UserEntity user) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Card(
@@ -111,10 +109,10 @@ class _UserListScreenState extends State<UserListScreen> {
               onChanged: (Operation value) async {
                 switch (value) {
                   case Operation.post:
-                    navigateTo(PostListScreen(user: user));
+                    context.pushPostList(user);
                     break;
                   case Operation.todo:
-                    navigateTo(ToDoListScreen(user: user));
+                    context.pushTodoList(user);
                     break;
                   case Operation.delete:
                     deleteUser(user);
@@ -130,7 +128,7 @@ class _UserListScreenState extends State<UserListScreen> {
     );
   }
 
-  void deleteUser(User user) async {
+  void deleteUser(UserEntity user) async {
     bool isAccepted = await deleteDialog(context);
     if (isAccepted) {
       if (!mounted) return;
@@ -138,7 +136,7 @@ class _UserListScreenState extends State<UserListScreen> {
       showDialog(
         context: context,
         builder: (_) {
-          return GenericBlocBuilder<UserBloc, User>(
+          return GenericBlocBuilder<UserBloc, UserEntity>(
             successStatusTitle: 'Successfully deleted',
             progressStatusTitle: "Deleting user...",
             onRetryPressed: () {
@@ -154,13 +152,13 @@ class _UserListScreenState extends State<UserListScreen> {
     }
   }
 
-  void editUser(User user) async {
-    late User userObj;
+  void editUser(UserEntity user) async {
+    late UserEntity userObj;
     bool isUpdate = await createDialog(
       user: user,
       type: Type.update,
       context: context,
-      userData: (User userValue) {
+      userData: (UserEntity userValue) {
         userObj = userValue;
       },
     );
@@ -171,7 +169,7 @@ class _UserListScreenState extends State<UserListScreen> {
       showDialog(
         context: context,
         builder: (_) {
-          return GenericBlocBuilder<UserBloc, User>(
+          return GenericBlocBuilder<UserBloc, UserEntity>(
             successStatusTitle: 'Successfully updated',
             progressStatusTitle: "Updating user...",
             onRetryPressed: () {
@@ -187,16 +185,6 @@ class _UserListScreenState extends State<UserListScreen> {
     }
   }
 
-  void navigateTo(Widget screen) {
-    if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => screen,
-      ),
-    );
-  }
-
   @override
   void initState() {
     BlocProvider.of<UserBloc>(context).add(UsersFetched());
@@ -208,9 +196,11 @@ class _UserListScreenState extends State<UserListScreen> {
     return Scaffold(
       floatingActionButton: floatingActionButton,
       appBar: _appBar,
-      body: GenericBlocBuilder<UserBloc, User>(
+      body: GenericBlocBuilder<UserBloc, UserEntity>(
         buildWhen: (_, __) {
-          return context.read<UserBloc>().operation == ApiOperation.select ? true : false;
+          return context.read<UserBloc>().operation == ApiOperation.select
+              ? true
+              : false;
         },
         emptyWidget: const EmptyWidget(message: "No user!"),
         onRetryPressed: () {
@@ -221,7 +211,7 @@ class _UserListScreenState extends State<UserListScreen> {
             shrinkWrap: true,
             itemCount: state.data?.length ?? 0,
             itemBuilder: (_, index) {
-              User user = state.data![index];
+              UserEntity user = state.data![index];
               return userListItem(user);
             },
           );

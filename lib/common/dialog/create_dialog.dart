@@ -1,15 +1,15 @@
 import 'package:clean_architecture_bloc/common/widget/drop_down.dart';
 import 'package:clean_architecture_bloc/common/widget/text_input.dart';
-import 'package:clean_architecture_bloc/features/user/data/models/user.dart';
+import 'package:clean_architecture_bloc/core/app_extension.dart';
 import 'package:clean_architecture_bloc/features/user/domain/entities/user_entity.dart';
 import 'package:flutter/material.dart';
 
 enum Type { create, update }
 
 Future<dynamic> createDialog({
-  User? user,
+  UserEntity? user,
   required BuildContext context,
-  required void Function(User) userData,
+  required void Function(UserEntity) userData,
   Type type = Type.create,
 }) {
   //if user is not null we have update operation, otherwise we have Create
@@ -86,7 +86,7 @@ Future<dynamic> createDialog({
                       bool isValid = formKey.currentState?.validate() ?? false;
                       if (isValid) {
                         userData(
-                          User(
+                          UserEntity(
                             id: id,
                             email: email,
                             status: userStatus,
@@ -94,7 +94,7 @@ Future<dynamic> createDialog({
                             gender: gender,
                           ),
                         );
-                        Navigator.pop(context, true);
+                        closeOverlay(context, true);
                       }
                     },
                     child: Text(type == Type.create ? "Create" : "Update"),
@@ -103,7 +103,7 @@ Future<dynamic> createDialog({
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(
-                    onPressed: () => Navigator.pop(context, false),
+                    onPressed: () => closeOverlay(context, false),
                     child: const Text("Cancel"),
                   ),
                 )

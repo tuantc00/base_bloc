@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:clean_architecture_bloc/common/usecase/usecase.dart';
 import 'package:clean_architecture_bloc/common/network/api_result.dart';
-import 'package:clean_architecture_bloc/features/user/data/models/user.dart';
+import 'package:clean_architecture_bloc/features/user/domain/entities/user_entity.dart';
 import 'package:clean_architecture_bloc/features/user/domain/repositories/user_repository.dart';
 
 @immutable
@@ -18,7 +18,7 @@ class UpdateUserUseCase implements UseCase<bool, UpdateUserParams> {
 
 @immutable
 class UpdateUserParams {
-  final User user;
+  final UserEntity user;
 
   const UpdateUserParams(this.user);
 }

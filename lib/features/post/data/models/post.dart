@@ -16,5 +16,14 @@ class Post extends PostEntity {
 
   factory Post.fromJson(Map<String, dynamic> json) => _$PostFromJson(json);
 
+  factory Post.fromEntity(PostEntity entity) {
+    return Post(
+      id: entity.id,
+      userId: entity.userId,
+      title: entity.title,
+      body: entity.body,
+    );
+  }
+
   Map<String, dynamic> toJson() => _$PostToJson(this);
 }

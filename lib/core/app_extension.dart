@@ -47,8 +47,15 @@ extension MapExtension on Map {
 }
 
 //Helper functions
+void closeOverlay<T>(BuildContext context, [T? result]) {
+  final navigator = Navigator.of(context);
+  if (navigator.canPop()) {
+    navigator.pop(result);
+  }
+}
+
 void pop(BuildContext context, int returnedLevel) {
   for (var i = 0; i < returnedLevel; ++i) {
-    Navigator.pop(context, true);
+    closeOverlay(context, true);
   }
 }

@@ -3,18 +3,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:clean_architecture_bloc/core/app_asset.dart';
 import 'package:clean_architecture_bloc/core/app_style.dart';
 import 'package:clean_architecture_bloc/core/app_extension.dart';
+import 'package:clean_architecture_bloc/core/router/app_navigation.dart';
 import 'package:clean_architecture_bloc/common/bloc/bloc_helper.dart';
 import 'package:clean_architecture_bloc/common/widget/text_input.dart';
 import 'package:clean_architecture_bloc/common/widget/empty_widget.dart';
-import 'package:clean_architecture_bloc/features/post/data/models/post.dart';
-import 'package:clean_architecture_bloc/features/user/data/models/user.dart';
 import 'package:clean_architecture_bloc/common/bloc/generic_bloc_builder.dart';
-import 'package:clean_architecture_bloc/features/comment/data/models/comment.dart';
+import 'package:clean_architecture_bloc/features/comment/domain/entities/comment_entity.dart';
+import 'package:clean_architecture_bloc/features/post/domain/entities/post_entity.dart';
+import 'package:clean_architecture_bloc/features/user/domain/entities/user_entity.dart';
 import 'package:clean_architecture_bloc/features/post/presentation/bloc/post_bloc.dart';
 import 'package:clean_architecture_bloc/features/post/presentation/bloc/post_event.dart';
 import 'package:clean_architecture_bloc/features/comment/presentation/bloc/comment_bloc.dart';
 import 'package:clean_architecture_bloc/features/comment/presentation/bloc/comment_event.dart';
-import 'package:clean_architecture_bloc/features/post/presentation/screens/create_post_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class PostDetailScreen extends StatefulWidget {
   const PostDetailScreen({
@@ -23,8 +24,8 @@ class PostDetailScreen extends StatefulWidget {
     this.user,
   });
 
-  final Post post;
-  final User? user;
+  final PostEntity post;
+  final UserEntity? user;
 
   @override
   State<PostDetailScreen> createState() => _PostDetailScreenState();
@@ -32,10 +33,17 @@ class PostDetailScreen extends StatefulWidget {
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
   final formKey = GlobalKey<FormState>();
-  TextEditingController nameEditingController = TextEditingController();
-  TextEditingController commentBodyEditingController = TextEditingController();
-  FocusNode userNameFocusNode = FocusNode();
-  FocusNode commentBodyFocusNode = FocusNode();
+  final TextEditingController nameEditingController = TextEditingController();
+  final TextEditingController commentBodyEditingController =
+      TextEditingController();
+  final FocusNode userNameFocusNode = FocusNode();
+  final FocusNode commentBodyFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserComments();
+  }
 
   @override
   void dispose() {
@@ -46,7 +54,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     super.dispose();
   }
 
-  getUserComments() async {
+  void _getUserComments() {
     context.read<CommentBloc>().add(CommentFetched(widget.post.id));
   }
 
@@ -54,27 +62,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_outlined),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => context.pop(),
       ),
       actions: [
         IconButton(
-          onPressed: () => deletePost(widget.post),
+          onPressed: () => _deletePost(widget.post),
           icon: const Icon(Icons.delete),
         ),
         IconButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) {
-                  return CreatePostScreen(
-                    user: widget.user!,
-                    post: widget.post,
-                    mode: PostMode.update,
-                  );
-                },
-              ),
-            );
+            final user = widget.user;
+            if (user == null) {
+              _snackBar('Missing user context for editing this post');
+              return;
+            }
+            context.pushEditPost(user, widget.post);
           },
           icon: const Icon(Icons.edit),
         )
@@ -82,7 +84,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  Widget get postItem {
+  Widget get _postItem {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -104,20 +106,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  Widget get commentItem {
-    getUserComments();
-    return GenericBlocBuilder<CommentBloc, Comment>(
+  Widget get _commentItem {
+    return GenericBlocBuilder<CommentBloc, CommentEntity>(
       buildWhen: (_, __) {
-        return context.read<CommentBloc>().operation == ApiOperation.select ? true : false;
+        return context.read<CommentBloc>().operation == ApiOperation.select
+            ? true
+            : false;
       },
-      onRetryPressed: () => getUserComments(),
-      emptyWidget: const EmptyWidget(message: "No comment"),
+      onRetryPressed: _getUserComments,
+      emptyWidget: const EmptyWidget(message: 'No comment'),
       successWidget: (state) {
         return ListView.builder(
           shrinkWrap: true,
           itemCount: state.data?.length ?? 0,
           itemBuilder: (_, index) {
-            Comment comment = state.data![index];
+            final comment = state.data![index];
             return Row(
               children: [
                 const CircleAvatar(
@@ -140,7 +143,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                 splashRadius: 25,
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
-                                onPressed: () => deleteComment(comment),
+                                onPressed: () => _deleteComment(comment),
                                 icon: const Icon(
                                   Icons.clear,
                                   color: Colors.redAccent,
@@ -163,14 +166,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  void deletePost(Post post) {
+  void _deletePost(PostEntity post) {
     context.read<PostBloc>().add(PostDeleted(post));
     showDialog(
       context: context,
       builder: (_) {
-        return GenericBlocBuilder<PostBloc, Post>(
-          successStatusTitle: "Successfully deleted",
-          progressStatusTitle: "Deleting post...",
+        return GenericBlocBuilder<PostBloc, PostEntity>(
+          successStatusTitle: 'Successfully deleted',
+          progressStatusTitle: 'Deleting post...',
           onRetryPressed: () {
             context.read<PostBloc>().add(PostDeleted(post));
           },
@@ -180,8 +183,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  snackBar(String message) {
-    return ScaffoldMessenger.of(context).showSnackBar(
+  void _snackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: const Color(0xFF556080),
         duration: const Duration(seconds: 3),
@@ -198,22 +201,22 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  void deleteComment(Comment comment) {
+  void _deleteComment(CommentEntity comment) {
     context.read<CommentBloc>().add(CommentDeleted(comment));
     showDialog(
       context: context,
       builder: (_) {
-        return GenericBlocBuilder<CommentBloc, Comment>(
-          progressStatusTitle: "Deleting comment...",
+        return GenericBlocBuilder<CommentBloc, CommentEntity>(
+          progressStatusTitle: 'Deleting comment...',
           onRetryPressed: () {
             context.read<CommentBloc>().add(CommentDeleted(comment));
           },
           successWidget: (_) {
             WidgetsBinding.instance.addPostFrameCallback(
               (_) {
-                getUserComments();
-                Navigator.pop(context);
-                snackBar("Successfully deleted");
+                _getUserComments();
+                closeOverlay(context);
+                _snackBar('Successfully deleted');
               },
             );
             return const SizedBox();
@@ -223,9 +226,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  Widget get createComment {
-    String name = "";
-    String commentBody = "";
+  Widget get _createComment {
+    String name = '';
+    String commentBody = '';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -244,13 +247,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               children: [
                 TextInput(
                   focusNode: userNameFocusNode,
-                  hint: "Write a comment",
+                  hint: 'Write a comment',
                   maxLine: 3,
                   autovalidateMode: AutovalidateMode.disabled,
                   controller: commentBodyEditingController,
                   validator: (String? value) {
                     if (value!.isNotEmpty) return null;
-                    return "Cannot be empty";
+                    return 'Cannot be empty';
                   },
                   onChanged: (String value) {
                     commentBody = value;
@@ -260,12 +263,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 TextInput(
                   focusNode: commentBodyFocusNode,
                   icon: const Icon(Icons.person, color: Color(0xFF556080)),
-                  hint: "Name",
+                  hint: 'Name',
                   autovalidateMode: AutovalidateMode.disabled,
                   controller: nameEditingController,
                   validator: (String? value) {
                     if (value!.isNotEmpty) return null;
-                    return "Cannot be empty";
+                    return 'Cannot be empty';
                   },
                   onChanged: (String value) {
                     name = value;
@@ -277,11 +280,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     userNameFocusNode.unfocus();
                     commentBodyFocusNode.unfocus();
                     if (isValid) {
-                      Comment comment = Comment(
+                      final comment = CommentEntity(
                         id: 0,
                         postId: widget.post.id,
                         name: name,
-                        email: "user@testUser",
+                        email: 'user@testUser',
                         body: commentBody,
                       );
 
@@ -289,20 +292,23 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       showDialog(
                         context: context,
                         builder: (_) {
-                          return GenericBlocBuilder<CommentBloc, Comment>(
-                            progressStatusTitle: "",
-                            emptyWidget: const EmptyWidget(message: "No comment"),
+                          return GenericBlocBuilder<CommentBloc, CommentEntity>(
+                            progressStatusTitle: '',
+                            emptyWidget:
+                                const EmptyWidget(message: 'No comment'),
                             onRetryPressed: () {
-                              context.read<CommentBloc>().add(CommentCreated(comment));
+                              context
+                                  .read<CommentBloc>()
+                                  .add(CommentCreated(comment));
                             },
                             successWidget: (_) {
                               WidgetsBinding.instance.addPostFrameCallback(
                                 (_) {
                                   nameEditingController.clear();
                                   commentBodyEditingController.clear();
-                                  snackBar("Successfully created");
-                                  Navigator.pop(context);
-                                  getUserComments();
+                                  _snackBar('Successfully created');
+                                  closeOverlay(context);
+                                  _getUserComments();
                                 },
                               );
                               return const SizedBox();
@@ -315,7 +321,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF556080),
                   ),
-                  child: const Text("Post comment"),
+                  child: const Text('Post comment'),
                 ),
               ],
             ),
@@ -333,17 +339,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         padding: const EdgeInsets.all(10.0),
         child: ListView(
           children: [
-            postItem,
+            _postItem,
             const Padding(
               padding: EdgeInsets.only(top: 15),
-              child: Text("Comments", style: headLine2),
+              child: Text('Comments', style: headLine2),
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),
               child: Divider(thickness: 2),
             ),
-            createComment,
-            commentItem,
+            _createComment,
+            _commentItem,
           ],
         ),
       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:clean_architecture_bloc/common/usecase/usecase.dart';
 import 'package:clean_architecture_bloc/common/network/api_result.dart';
-import 'package:clean_architecture_bloc/features/post/data/models/post.dart';
+import 'package:clean_architecture_bloc/features/post/domain/entities/post_entity.dart';
 import 'package:clean_architecture_bloc/features/post/domain/repositories/post_repository.dart';
 
 @immutable
@@ -18,7 +18,7 @@ class UpdatePostUseCase implements UseCase<bool, UpdatePostParams> {
 
 @immutable
 class UpdatePostParams {
-  final Post post;
+  final PostEntity post;
 
   const UpdatePostParams(this.post);
 }

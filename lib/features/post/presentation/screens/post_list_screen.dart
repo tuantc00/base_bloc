@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:clean_architecture_bloc/core/app_style.dart';
 import 'package:clean_architecture_bloc/core/app_extension.dart';
+import 'package:clean_architecture_bloc/core/router/app_navigation.dart';
 import 'package:clean_architecture_bloc/common/widget/empty_widget.dart';
-import 'package:clean_architecture_bloc/features/user/data/models/user.dart';
-import 'package:clean_architecture_bloc/features/post/data/models/post.dart';
+import 'package:clean_architecture_bloc/features/user/domain/entities/user_entity.dart';
+import 'package:clean_architecture_bloc/features/post/domain/entities/post_entity.dart';
 import 'package:clean_architecture_bloc/common/bloc/generic_bloc_builder.dart';
 import 'package:clean_architecture_bloc/features/post/presentation/bloc/post_bloc.dart';
 import 'package:clean_architecture_bloc/features/post/presentation/bloc/post_event.dart';
-import 'package:clean_architecture_bloc/features/post/presentation/screens/create_post_screen.dart';
-import 'package:clean_architecture_bloc/features/post/presentation/screens/post_detail_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class PostListScreen extends StatefulWidget {
   const PostListScreen({
@@ -17,7 +17,7 @@ class PostListScreen extends StatefulWidget {
     required this.user,
   });
 
-  final User user;
+  final UserEntity user;
 
   @override
   State<PostListScreen> createState() => _PostListScreenState();
@@ -40,7 +40,7 @@ class _PostListScreenState extends State<PostListScreen> {
       title: const Text("Posts"),
       centerTitle: false,
       leading: IconButton(
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => context.pop(),
         icon: const Icon(Icons.arrow_back_outlined),
       ),
       actions: [
@@ -57,12 +57,8 @@ class _PostListScreenState extends State<PostListScreen> {
       icon: const Icon(Icons.note_add),
       label: const Text("Create a new post"),
       onPressed: () async {
-        var resultFromCreatePostScreen = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => CreatePostScreen(user: widget.user),
-          ),
-        );
+        var resultFromCreatePostScreen =
+            await context.pushCreatePost<bool>(widget.user);
         if (resultFromCreatePostScreen != null && resultFromCreatePostScreen) {
           getData();
         }
@@ -103,26 +99,21 @@ class _PostListScreenState extends State<PostListScreen> {
     );
   }
 
-  Widget userPostItem(List<Post> posts) {
+  Widget userPostItem(List<PostEntity> posts) {
     return Expanded(
       child: ListView.builder(
         shrinkWrap: true,
         itemCount: posts.length,
         itemBuilder: (_, index) {
-          Post post = posts[index];
+          PostEntity post = posts[index];
           return Center(
             child: GestureDetector(
               onTap: () async {
-                var resultFromPostDetailScreen = await Navigator.push(
-                  _,
-                  MaterialPageRoute(
-                    builder: (_) {
-                      return PostDetailScreen(post: post, user: widget.user);
-                    },
-                  ),
-                );
+                var resultFromPostDetailScreen =
+                    await context.pushPostDetail<bool>(widget.user, post);
 
-                if (resultFromPostDetailScreen != null && resultFromPostDetailScreen) {
+                if (resultFromPostDetailScreen != null &&
+                    resultFromPostDetailScreen) {
                   getData();
                 }
               },
@@ -175,7 +166,7 @@ class _PostListScreenState extends State<PostListScreen> {
             padding: EdgeInsets.only(left: 20, top: 15),
             child: Text("Posts", style: headLine1),
           ),
-          GenericBlocBuilder<PostBloc, Post>(
+          GenericBlocBuilder<PostBloc, PostEntity>(
             emptyWidget: const EmptyWidget(message: "No post"),
             onRetryPressed: () => getData(),
             successWidget: (state) => userPostItem(state.data ?? []),

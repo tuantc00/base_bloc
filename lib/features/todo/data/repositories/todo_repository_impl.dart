@@ -11,22 +11,32 @@ class TodoRepositoryImpl extends TodoRepository with RepositoryHelper<ToDo> {
   TodoRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<ApiResult<List<ToDo>>> getTodos(int userId, {TodoStatus? status}) async {
-    return checkItemsFailOrSuccess(remoteDataSource.getTodos(userId, status: status));
+  Future<ApiResult<List<TodoEntity>>> getTodos(
+    int userId, {
+    TodoStatus? status,
+  }) async {
+    return checkItemsFailOrSuccess(
+        remoteDataSource.getTodos(userId, status: status));
   }
 
   @override
-  Future<ApiResult<bool>> createTodo(ToDo todo) async {
-    return checkItemFailOrSuccess(remoteDataSource.createTodo(todo));
+  Future<ApiResult<bool>> createTodo(TodoEntity todo) async {
+    return checkItemFailOrSuccess(
+      remoteDataSource.createTodo(ToDo.fromEntity(todo)),
+    );
   }
 
   @override
-  Future<ApiResult<bool>> updateTodo(ToDo todo) async {
-    return checkItemFailOrSuccess(remoteDataSource.updateTodo(todo));
+  Future<ApiResult<bool>> updateTodo(TodoEntity todo) async {
+    return checkItemFailOrSuccess(
+      remoteDataSource.updateTodo(ToDo.fromEntity(todo)),
+    );
   }
 
   @override
-  Future<ApiResult<bool>> deleteTodo(ToDo todo) async {
-    return checkItemFailOrSuccess(remoteDataSource.deleteTodo(todo));
+  Future<ApiResult<bool>> deleteTodo(TodoEntity todo) async {
+    return checkItemFailOrSuccess(
+      remoteDataSource.deleteTodo(ToDo.fromEntity(todo)),
+    );
   }
 }

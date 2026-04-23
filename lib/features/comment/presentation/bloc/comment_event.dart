@@ -1,4 +1,4 @@
-import 'package:clean_architecture_bloc/features/comment/data/models/comment.dart';
+import 'package:clean_architecture_bloc/features/comment/domain/entities/comment_entity.dart';
 
 abstract class CommentEvent {}
 
@@ -9,13 +9,13 @@ class CommentFetched extends CommentEvent {
 }
 
 class CommentCreated extends CommentEvent {
-  final Comment comment;
+  final CommentEntity comment;
 
   CommentCreated(this.comment);
 }
 
 class CommentDeleted extends CommentEvent {
-  final Comment comment;
+  final CommentEntity comment;
 
   CommentDeleted(this.comment);
 }

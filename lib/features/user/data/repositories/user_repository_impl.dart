@@ -11,22 +11,32 @@ class UserRepositoryImpl extends UserRepository with RepositoryHelper<User> {
   UserRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<ApiResult<List<User>>> getUsers({Gender? gender, UserStatus? status}) async {
-    return checkItemsFailOrSuccess(remoteDataSource.getUsers(gender: gender, status: status));
+  Future<ApiResult<List<UserEntity>>> getUsers({
+    Gender? gender,
+    UserStatus? status,
+  }) async {
+    return checkItemsFailOrSuccess(
+        remoteDataSource.getUsers(gender: gender, status: status));
   }
 
   @override
-  Future<ApiResult<bool>> createUser(User user) async {
-    return checkItemFailOrSuccess(remoteDataSource.createUser(user));
+  Future<ApiResult<bool>> createUser(UserEntity user) async {
+    return checkItemFailOrSuccess(
+      remoteDataSource.createUser(User.fromEntity(user)),
+    );
   }
 
   @override
-  Future<ApiResult<bool>> updateUser(User user) async {
-    return checkItemFailOrSuccess(remoteDataSource.updateUser(user));
+  Future<ApiResult<bool>> updateUser(UserEntity user) async {
+    return checkItemFailOrSuccess(
+      remoteDataSource.updateUser(User.fromEntity(user)),
+    );
   }
 
   @override
-  Future<ApiResult<bool>> deleteUser(User user) async {
-    return checkItemFailOrSuccess(remoteDataSource.deleteUser(user));
+  Future<ApiResult<bool>> deleteUser(UserEntity user) async {
+    return checkItemFailOrSuccess(
+      remoteDataSource.deleteUser(User.fromEntity(user)),
+    );
   }
 }
