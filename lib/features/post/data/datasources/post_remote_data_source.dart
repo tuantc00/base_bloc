@@ -1,7 +1,6 @@
 import 'package:clean_architecture_bloc/common/network/api_config.dart';
 import 'package:clean_architecture_bloc/common/network/api_helper.dart';
 import 'package:clean_architecture_bloc/common/network/dio_client.dart';
-import 'package:clean_architecture_bloc/di.dart';
 import 'package:clean_architecture_bloc/features/post/data/models/post.dart';
 import 'package:clean_architecture_bloc/features/user/data/models/user.dart';
 
@@ -16,21 +15,26 @@ abstract class PostRemoteDataSource {
 }
 
 class PostRemoteDataSourceImpl with ApiHelper implements PostRemoteDataSource {
-  final DioClient dioClient = getIt<DioClient>();
+  final DioClient dioClient;
+
+  PostRemoteDataSourceImpl(this.dioClient);
 
   @override
   Future<bool> createPost(Post post) async {
-    return await makePostRequest(dioClient.dio.post(ApiConfig.posts, data: post));
+    return await makePostRequest(
+        dioClient.dio.post(ApiConfig.posts, data: post));
   }
 
   @override
   Future<bool> updatePost(Post post) async {
-    return await makePutRequest(dioClient.dio.put("${ApiConfig.posts}/${post.id}", data: post));
+    return await makePutRequest(
+        dioClient.dio.put("${ApiConfig.posts}/${post.id}", data: post));
   }
 
   @override
   Future<bool> deletePost(Post post) async {
-    return await makeDeleteRequest(dioClient.dio.delete("${ApiConfig.posts}/${post.id}"));
+    return await makeDeleteRequest(
+        dioClient.dio.delete("${ApiConfig.posts}/${post.id}"));
   }
 
   @override

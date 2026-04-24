@@ -1,7 +1,6 @@
 import 'package:clean_architecture_bloc/common/network/api_config.dart';
 import 'package:clean_architecture_bloc/common/network/api_helper.dart';
 import 'package:clean_architecture_bloc/common/network/dio_client.dart';
-import 'package:clean_architecture_bloc/di.dart';
 import 'package:clean_architecture_bloc/features/comment/data/models/comment.dart';
 
 abstract class CommentRemoteDataSource {
@@ -12,17 +11,23 @@ abstract class CommentRemoteDataSource {
   Future<bool> deleteComment(Comment comment);
 }
 
-class CommentRemoteDataSourceImpl with ApiHelper implements CommentRemoteDataSource {
-  final DioClient dioClient = getIt<DioClient>();
+class CommentRemoteDataSourceImpl
+    with ApiHelper
+    implements CommentRemoteDataSource {
+  final DioClient dioClient;
+
+  CommentRemoteDataSourceImpl(this.dioClient);
 
   @override
   Future<bool> createComment(Comment comment) async {
-    return await makePostRequest(dioClient.dio.post(ApiConfig.comments, data: comment));
+    return await makePostRequest(
+        dioClient.dio.post(ApiConfig.comments, data: comment));
   }
 
   @override
   Future<bool> deleteComment(Comment comment) async {
-    return await makeDeleteRequest(dioClient.dio.delete("${ApiConfig.comments}/${comment.id}"));
+    return await makeDeleteRequest(
+        dioClient.dio.delete("${ApiConfig.comments}/${comment.id}"));
   }
 
   @override
